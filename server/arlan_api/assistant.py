@@ -157,13 +157,24 @@ def stream_reply(conv_id: int, user: dict, context: str | None):
     """Generator of SSE strings. Stores the full exchange in the conversation."""
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
-        yield _sse({"type": "error", "text": "ИИ не подключён: на сервере не задан ANTHROPIC_API_KEY. Администратору нужно добавить ключ в настройки сервиса."})
-        yield _sse({"type": "done"})
+        from .local_assistant import local_reply
+        last = db.fetch_one(db.select(db.messages).where(db.messages.c.conversation_id == conv_id)
+                            .where(db.messages.c.role == "user").order_by(db.messages.c.id.desc()))
+        blocks = db.jload(last["content"], []) if last else []
+        text = " ".join(b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text")
+        yield from local_reply(conv_id, user, text)
         return
     import anthropic
     client = anthropic.Anthropic(api_key=key)
     hist = db.fetch_all(db.select(db.messages).where(db.messages.c.conversation_id == conv_id).order_by(db.messages.c.id))
-    msgs = [{"role": m["role"], "content": db.jload(m["content"], m["content"])} for m in hist]
+    msgs = []
+    for m in hist:  # drop local-mode notes; Claude only gets standard content blocks
+        c = db.jload(m["content"], m["content"])
+        if isinstance(c, list):
+            c = [b for b in c if b.get("type") != "tool_note"]
+            if not c:
+                continue
+        msgs.append({"role": m["role"], "content": c})
     system = system_prompt(user, context)
     for _ in range(MAX_STEPS):
         try:
@@ -206,7 +217,7 @@ def visible_messages(conv_id: int) -> list[dict]:
             out.append({"role": m["role"], "text": c, "tools": []})
             continue
         texts = [b.get("text", "") for b in c if b.get("type") == "text"]
-        tools = [b.get("name") for b in c if b.get("type") == "tool_use"]
+        tools = [b.get("name") for b in c if b.get("type") in ("tool_use", "tool_note")]
         if m["role"] == "user" and not texts:
             continue  # tool results
         if out and m["role"] == "assistant" and out[-1]["role"] == "assistant":

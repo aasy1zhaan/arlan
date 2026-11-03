@@ -30,6 +30,8 @@ export default function Chat({ user, compact, context, onClose }) {
   const end = useRef(null);
   const fileRef = useRef(null);
 
+  const [aiMode, setAiMode] = useState(null);
+  useEffect(() => { api("/api/v1/health").then((h) => setAiMode(h.ai ? "claude" : "local")).catch(() => {}); }, []);
   const loadConvs = () => api("/api/v1/chat").then(setConvs).catch((e) => setErr(e.message));
   useEffect(() => { loadConvs(); }, []);
   useEffect(() => { if (cid) api("/api/v1/chat/" + cid).then((c) => setMsgs(c.messages)).catch((e) => setErr(e.message)); else setMsgs([]); }, [cid]);
@@ -88,7 +90,7 @@ export default function Chat({ user, compact, context, onClose }) {
       )}
       <section className="chat-main">
         <header className="chat-h">
-          <div><b>ARLAN</b><small className="muted"> · ИИ-ассистент · видит данные платформы в пределах ваших прав</small></div>
+          <div><b>ARLAN</b><small className="muted"> · ассистент · видит данные платформы в пределах ваших прав{aiMode === "local" ? " · локальный режим" : aiMode === "claude" ? " · Claude" : ""}</small></div>
           {compact && <div className="chat-h-r"><a href="#/assistant" className="btn-ghost">Открыть полностью</a><button className="round" onClick={onClose} aria-label="Закрыть"><Icon name="close" /></button></div>}
         </header>
         <div className="chat-scroll">
