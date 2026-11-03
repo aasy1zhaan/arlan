@@ -1,0 +1,22 @@
+{
+  "station_id": "PTR-ESIL-01",
+  "api_url": "http://YOUR-SERVER:8000",
+  "api_key": "CHANGE-ME",
+  "mode": "water",
+  "serial_port": "/dev/serial0",
+  "baud": 9600,
+  "data_dir": "data",
+  "window_hours": 6,
+  "process_every_min": 60,
+  "antenna_elevation_m": 102.50,
+  "snow_bare_height_m": null,
+  "azimuth_mask": [[120, 240]],
+  "gnssir": {
+    "elev_min": 5,
+    "elev_max": 25,
+    "rh_min": 0.5,
+    "rh_max": 8.0,
+    "min_peak2noise": 3.0
+  },
+  "_comment": "antenna_elevation_m = высота фазового центра антенны в системе высот гидропоста (замерить нивелиром). azimuth_mask = секторы азимутов, где перед антенной вода. Для режима snow: mode=snow и snow_bare_height_m = RH по голой земле."
+}

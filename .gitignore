@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+server/data/
+firmware/gnss_station/data/
+firmware/gnss_station/config.json
+web/node_modules/
+web/dist/
+.env

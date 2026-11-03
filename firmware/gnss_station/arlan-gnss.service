@@ -1,0 +1,14 @@
+[Unit]
+Description=ARLAN SKY MIRROR GNSS-IR station
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/arlan/firmware/gnss_station
+ExecStart=/usr/bin/python3 station.py --config config.json
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
